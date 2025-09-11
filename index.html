@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>員工管理系統</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .header h1 {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #4cae4c;
+        }
+        .btn-secondary {
+            background-color: #f0ad4e;
+        }
+        .btn-secondary:hover {
+            background-color: #ec971f;
+        }
+        .btn-danger {
+            background-color: #d9534f;
+        }
+        .btn-danger:hover {
+            background-color: #c9302c;
+        }
+        .btn-info {
+            background-color: #5bc0de;
+        }
+        .btn-info:hover {
+            background-color: #31b0d5;
+        }
+        .btn-edit {
+            background-color: #337ab7;
+        }
+        .btn-edit:hover {
+            background-color: #286090;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .flex-item {
+            width: 48%;
+        }
+        .login-box, .welcome-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 50vh;
+            text-align: center;
+        }
+        .welcome-box h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .welcome-box p {
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .button-group {
+            margin-top: 20px;
+        }
+        .button-group .btn {
+            width: 150px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>員工管理系統</h1>
+        <button id="authBtn" class="btn btn-info" onclick="toggleAuth()">登入</button>
+    </div>
+
+    <div id="loginPage" class="section">
+        <div class="login-box">
+            <h2>員工登入</h2>
+            <div class="form-group">
+                <label for="employeeIdInput">請輸入員工編號:</label>
+                <input type="text" id="employeeIdInput">
+            </div>
+            <button class="btn" onclick="login()">登入</button>
+        </div>
+    </div>
+    
+    <div id="welcomePage" class="section" style="display:none;">
+        <div class="welcome-box">
+            <h2>歡迎使用</h2>
+            <p>綸綸股份有限公司 員工管理系統</p>
+            <div id="welcomeButtons" class="button-group">
+                </div>
+        </div>
+    </div>
+
+    <div id="managerPage" style="display:none;">
+        <hr>
+        <div class="section" id="addEmployeeSection">
+            <h2>新增員工</h2>
+            <div class="form-group">
+                <label for="addId">員工編號:</label>
+                <input type="text" id="addId" required>
+            </div>
+            <div class="form-group">
+                <label for="addName">姓名:</label>
+                <input type="text" id="addName" required>
+            </div>
+            <div class="form-group">
+                <label for="addDepartment">部門:</label>
+                <select id="addDepartment">
+                    <option value="資訊部門">資訊部門</option>
+                    <option value="保鑣部門">保鑣部門</option>
+                    <option value="系統部門">系統部門</option>
+                    <option value="管理部門">管理部門</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="addPosition">職位:</label>
+                <select id="addPosition">
+                    </select>
+            </div>
+            <div class="form-group" id="otherPositionDiv" style="display:none;">
+                <label for="otherPositionInput">請輸入其他職位:</label>
+                <input type="text" id="otherPositionInput">
+            </div>
+            <div class="form-group">
+                <label for="addSalary">基本薪資:</label>
+                <input type="number" id="addSalary" required>
+            </div>
+            <button class="btn" onclick="addEmployee()">新增員工</button>
+        </div>
+
+        <hr>
+
+        <div class="section" id="employeeListSection">
+            <h2>員工列表</h2>
+            <table id="employeeTable">
+                <thead>
+                    <tr>
+                        <th>編號</th>
+                        <th>姓名</th>
+                        <th>部門</th>
+                        <th>職位</th>
+                        <th>基本薪資</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="employeePage" style="display:none;">
+        <hr>
+        <div class="section">
+            <h2>個人資料</h2>
+            <div id="personalDetailsContent">
+                </div>
+        </div>
+    </div>
+</div>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>員工詳細資料</h2>
+        <div id="detailsContent">
+            </div>
+        
+        <div id="managerOnlyContent">
+            <hr>
+            <h3>薪資與績效管理</h3>
+            <div class="flex-container">
+                <div class="flex-item">
+                    <div class="form-group">
+                        <label for="salaryAmount">調整金額:</label>
+                        <input type="number" id="salaryAmount" placeholder="輸入金額" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="salaryNote">備註 (可選):</label>
+                        <input type="text" id="salaryNote" placeholder="例如: 績效獎金">
+                    </div>
+                    <button class="btn btn-secondary" onclick="updateSalary('bonus')">發放獎金</button>
+                    <button class="btn btn-danger" onclick="updateSalary('deduction')">進行扣款</button>
+                </div>
+                <div class="flex-item">
+                    <div class="form-group">
+                        <label for="performanceLevel">設定績效等級:</label>
+                        <select id="performanceLevel">
+                            <option value="A">A (優異)</option>
+                            <option value="B">B (良好)</option>
+                            <option value="C">C (普通)</option>
+                            <option value="D">D (待改進)</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-info" onclick="setPerformance()">設定績效</button>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h3>協助打卡</h3>
+            <div class="button-group">
+                <button class="btn btn-info" onclick="clockIn(currentEmployeeId, 'manager')">代打卡上班</button>
+                <button class="btn btn-info" onclick="clockOut(currentEmployeeId, 'manager')">代打卡下班</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+        <h2>編輯員工資料</h2>
+        <div class="form-group">
+            <label for="editIdInput">員工編號:</label>
+            <input type="text" id="editIdInput">
+        </div>
+        <div class="form-group">
+            <label for="editName">姓名:</label>
+            <input type="text" id="editName">
+        </div>
+        <div class="form-group">
+            <label for="editDepartment">部門:</label>
+            <select id="editDepartment">
+                <option value="資訊部門">資訊部門</option>
+                <option value="保鑣部門">保鑣部門</option>
+                <option value="系統部門">系統部門</option>
+                <option value="管理部門">管理部門</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="editPosition">職位:</label>
+            <select id="editPosition"></select>
+        </div>
+        <div class="form-group" id="editOtherPositionDiv" style="display:none;">
+            <label for="editOtherPositionInput">請輸入其他職位:</label>
+            <input type="text" id="editOtherPositionInput">
+        </div>
+        <div class="form-group">
+            <label for="editSalary">基本薪資:</label>
+            <input type="number" id="editSalary">
+        </div>
+        <button class="btn btn-edit" onclick="saveEditedEmployee()">保存</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'employee_manager_data';
+    let currentEmployeeId = null;
+    let originalEmployeeId = null; // 用於儲存編輯前的原始 ID
+    const defaultPositions = ['董事長', '副董事長', '總經理', '副總經理', '祕書', '管理員', '經理', '單位主管', '職員', '工作人員'];
+    const modifiablePositions = ['董事長', '副董事長', '總經理', '副總經理', '管理員'];
+    const viewablePositions = ['董事長', '副董事長', '總經理', '副總經理', '經理', '管理員'];
+    const departments = ['資訊部門', '保鑣部門', '系統部門', '管理部門'];
+
+    // 頁面顯示控制
+    function showPage(pageId) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('welcomePage').style.display = 'none';
+        document.getElementById('managerPage').style.display = 'none';
+        document.getElementById('employeePage').style.display = 'none';
+        
+        document.getElementById(pageId).style.display = 'block';
+    }
+
+    function toggleAuth() {
+        if (currentEmployeeId) {
+            logout();
+        } else {
+            showLoginScreen();
+        }
+    }
+
+    function showLoginScreen() {
+        currentEmployeeId = null;
+        document.getElementById('employeeIdInput').value = '';
+        document.getElementById('authBtn').textContent = '登入';
+        showPage('loginPage');
+    }
+
+    function logout() {
+        currentEmployeeId = null;
+        alert('您已成功登出。');
+        showLoginScreen();
+    }
+
+    // 資料管理核心功能
+    function loadData() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+            return JSON.parse(data);
+        }
+        return {
+            employees: {},
+            positions: [...defaultPositions] // 使用預設職位
+        };
+    }
+
+    function saveData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // 登入功能
+    function login() {
+        const employeeId = document.getElementById('employeeIdInput').value.trim().toUpperCase();
+        const data = loadData();
+        const employee = data.employees[employeeId];
+
+        let loginType = '';
+        if (employeeId === 'ADMIN_LUN' || (employee && employee.position === '管理員')) {
+            loginType = 'admin';
+        } else if (employee && modifiablePositions.includes(employee.position)) {
+            loginType = 'manager_full';
+        } else if (employee && viewablePositions.includes(employee.position)) {
+            loginType = 'manager_view';
+        } else if (employee) {
+            loginType = 'employee';
+        } else {
+            alert('員工編號不存在。');
+            return;
+        }
+
+        currentEmployeeId = employeeId;
+        document.getElementById('authBtn').textContent = '登出';
+        renderWelcomePage(loginType);
+    }
+    
+    function renderWelcomePage(type) {
+        const welcomeButtons = document.getElementById('welcomeButtons');
+        welcomeButtons.innerHTML = '';
+        if (type.startsWith('manager') || type === 'admin') {
+            welcomeButtons.innerHTML = '<button class="btn" onclick="enterManagerPage()">進入系統</button>';
+        } else {
+            welcomeButtons.innerHTML = `
+                <button class="btn" onclick="enterEmployeePage()">查看個人資料</button>
+                <button class="btn btn-info" onclick="clockIn(currentEmployeeId)">上班打卡</button>
+                <button class="btn btn-info" onclick="clockOut(currentEmployeeId)">下班打卡</button>
+            `;
+        }
+        showPage('welcomePage');
+    }
+
+    function enterManagerPage() {
+        showPage('managerPage');
+        renderEmployeeTable();
+    }
+    
+    function enterEmployeePage() {
+        showPage('employeePage');
+        renderEmployeeDetails(currentEmployeeId, 'personalDetailsContent');
+    }
+
+    // 職位選擇功能
+    function populatePositionSelect(selectId, positions, selectedPosition) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '';
+        
+        const combinedPositions = Array.from(new Set([...defaultPositions, ...positions]));
+
+        combinedPositions.forEach(pos => {
+            const option = document.createElement('option');
+            option.value = pos;
+            option.textContent = pos;
+            select.appendChild(option);
+        });
+
+        const otherOption = document.createElement('option');
+        otherOption.value = '其他';
+        otherOption.textContent = '其他';
+        select.appendChild(otherOption);
+
+        if (selectedPosition && combinedPositions.includes(selectedPosition)) {
+            select.value = selectedPosition;
+        } else if (selectedPosition) {
+            select.value = '其他';
+            document.getElementById(`${selectId.replace('Position', 'OtherPositionDiv')}`).style.display = 'block';
+            document.getElementById(`${selectId.replace('Position', 'OtherPositionInput')}`).value = selectedPosition;
+        }
+    }
+
+    document.getElementById('addPosition').addEventListener('change', (e) => {
+        document.getElementById('otherPositionDiv').style.display = e.target.value === '其他' ? 'block' : 'none';
+    });
+    
+    document.getElementById('editPosition').addEventListener('change', (e) => {
+        document.getElementById('editOtherPositionDiv').style.display = e.target.value === '其他' ? 'block' : 'none';
+    });
+
+    // 員工管理功能
+    function addEmployee() {
+        const id = document.getElementById('addId').value.trim().toUpperCase();
+        const name = document.getElementById('addName').value;
+        const department = document.getElementById('addDepartment').value;
+        const positionSelect = document.getElementById('addPosition');
+        let position = positionSelect.value;
+        if (position === '其他') {
+            position = document.getElementById('otherPositionInput').value;
+        }
+        const salary = parseFloat(document.getElementById('addSalary').value);
+
+        if (!id || !name || !department || !position || isNaN(salary)) {
+            alert('請完整填寫所有欄位。');
+            return;
+        }
+
+        const data = loadData();
+
+        if (data.employees[id]) {
+            alert(`員工編號 ${id} 已存在，請使用其他編號。`);
+            return;
+        }
+
+        data.employees[id] = {
+            name: name,
+            department: department,
+            position: position,
+            salary: salary,
+            performance: null,
+            salaryHistory: [{ date: new Date().toISOString(), type: 'initial', amount: salary, note: '初始薪資' }],
+            attendance: []
+        };
+
+        if (!data.positions.includes(position) && position !== '其他') {
+            data.positions.push(position);
+        }
+        
+        saveData(data);
+        alert(`成功新增員工 ${name}，編號為 ${id}。`);
+        document.getElementById('addId').value = '';
+        document.getElementById('addName').value = '';
+        document.getElementById('addDepartment').value = departments[0];
+        document.getElementById('addSalary').value = '';
+        document.getElementById('addPosition').value = data.positions[0] || '董事長';
+        document.getElementById('otherPositionDiv').style.display = 'none';
+
+        renderEmployeeTable();
+    }
+    
+    function deleteEmployee(id) {
+        if (confirm(`您確定要刪除員工編號 ${id} 的資料嗎？此操作無法復原！`)) {
+            const data = loadData();
+            delete data.employees[id];
+            saveData(data);
+            alert(`員工編號 ${id} 的資料已成功刪除。`);
+            renderEmployeeTable();
+        }
+    }
+
+    function renderEmployeeTable() {
+        const tableBody = document.querySelector('#employeeTable tbody');
+        tableBody.innerHTML = '';
+        const data = loadData();
+        const loggedInUser = data.employees[currentEmployeeId] || { position: '管理員' };
+        const canModify = modifiablePositions.includes(loggedInUser.position) || currentEmployeeId === 'ADMIN_LUN';
+        const canView = viewablePositions.includes(loggedInUser.position) || currentEmployeeId === 'ADMIN_LUN';
+        
+        document.getElementById('addEmployeeSection').style.display = canModify ? 'block' : 'none';
+
+        const sortedIds = Object.keys(data.employees).sort();
+
+        sortedIds.forEach(id => {
+            const employee = data.employees[id];
+            if (!canView && !canModify) return;
+
+            const row = tableBody.insertRow();
+            let actionButtons = `<button class="btn btn-info" onclick="openModal('${id}')">詳細資訊</button>`;
+            if (canModify) {
+                actionButtons += `
+                    <button class="btn btn-edit" onclick="openEditModal('${id}')">編輯</button>
+                    <button class="btn btn-danger" onclick="deleteEmployee('${id}')">刪除</button>
+                `;
+            }
+
+            row.innerHTML = `
+                <td>${id}</td>
+                <td>${employee.name}</td>
+                <td>${employee.department || '未設定'}</td>
+                <td>${employee.position}</td>
+                <td>${employee.salary.toFixed(2)}</td>
+                <td>${actionButtons}</td>
+            `;
+        });
+    }
+
+    // 彈窗與詳細資料功能
+    function openModal(id) {
+        currentEmployeeId = id;
+        renderEmployeeDetails(id, 'detailsContent');
+        
+        const data = loadData();
+        const loggedInUser = data.employees[currentEmployeeId] || { position: '管理員' };
+        const canModify = modifiablePositions.includes(loggedInUser.position) || currentEmployeeId === 'ADMIN_LUN';
+        document.getElementById('managerOnlyContent').style.display = canModify ? 'block' : 'none';
+
+        document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('detailsModal').style.display = 'none';
+        
+        // 清除上次殘留的輸入資料
+        document.getElementById('salaryAmount').value = '';
+        document.getElementById('salaryNote').value = '';
+        document.getElementById('performanceLevel').value = 'A';
+
+        currentEmployeeId = null;
+    }
+
+    function renderEmployeeDetails(id, containerId) {
+        const data = loadData();
+        const employee = data.employees[id];
+        const detailsContent = document.getElementById(containerId);
+
+        if (!employee) {
+            detailsContent.innerHTML = '<p>找不到該員工。</p>';
+            return;
+        }
+
+        let salaryHistoryHtml = '<h4>薪資變動記錄</h4>';
+        if (employee.salaryHistory.length > 0) {
+            employee.salaryHistory.forEach(record => {
+                const date = new Date(record.date).toLocaleString();
+                const sign = record.type === 'deduction' ? '-' : '+';
+                const note = record.note ? record.note : '無備註';
+                salaryHistoryHtml += `<p><strong>${date}</strong> - ${note} (${sign}${Math.abs(record.amount).toFixed(2)})</p>`;
+            });
+        } else {
+            salaryHistoryHtml += '<p>無記錄。</p>';
+        }
+
+        let attendanceHtml = '<h4>打卡記錄</h4>';
+        if (employee.attendance.length > 0) {
+            employee.attendance.forEach(entry => {
+                const startTime = new Date(entry.start_time).toLocaleString();
+                const endTime = entry.end_time ? new Date(entry.end_time).toLocaleString() : '尚未打卡下班';
+                let hours = 0;
+                if (entry.end_time) {
+                    const durationMs = new Date(entry.end_time) - new Date(entry.start_time);
+                    hours = (durationMs / (1000 * 60 * 60)).toFixed(2);
+                }
+                attendanceHtml += `<p><strong>上班:</strong> ${startTime} | <strong>下班:</strong> ${endTime} | <strong>工時:</strong> ${hours} 小時</p>`;
+            });
+        } else {
+            attendanceHtml += '<p>無記錄。</p>';
+        }
+
+        detailsContent.innerHTML = `
+            <h3>${employee.name} (${id})</h3>
+            <p><strong>部門:</strong> ${employee.department || '未設定'}</p>
+            <p><strong>職位:</strong> ${employee.position}</p>
+            <p><strong>基本薪資:</strong> ${employee.salary.toFixed(2)}</p>
+            <p><strong>績效等級:</strong> ${employee.performance || '未評定'}</p>
+            <hr>
+            ${salaryHistoryHtml}
+            <hr>
+            ${attendanceHtml}
+        `;
+    }
+
+    // 編輯功能
+    function openEditModal(id) {
+        currentEmployeeId = id;
+        originalEmployeeId = id;
+        const data = loadData();
+        const employee = data.employees[id];
+        
+        if (!employee) {
+            alert('找不到該員工。');
+            return;
+        }
+
+        document.getElementById('editIdInput').value = id;
+        document.getElementById('editName').value = employee.name;
+        document.getElementById('editDepartment').value = employee.department || '資訊部門';
+        document.getElementById('editSalary').value = employee.salary;
+        
+        populatePositionSelect('editPosition', data.positions, employee.position);
+        
+        document.getElementById('editModal').style.display = 'block';
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        currentEmployeeId = null;
+        originalEmployeeId = null;
+    }
+
+    function saveEditedEmployee() {
+        const newId = document.getElementById('editIdInput').value.trim().toUpperCase();
+        const name = document.getElementById('editName').value;
+        const department = document.getElementById('editDepartment').value;
+        const positionSelect = document.getElementById('editPosition');
+        let position = positionSelect.value;
+        if (position === '其他') {
+            position = document.getElementById('editOtherPositionInput').value;
+        }
+        const salary = parseFloat(document.getElementById('editSalary').value);
+
+        if (!newId || !name || !department || !position || isNaN(salary)) {
+            alert('請完整填寫所有欄位。');
+            return;
+        }
+
+        const data = loadData();
+
+        if (newId !== originalEmployeeId && data.employees[newId]) {
+            alert(`新的員工編號 ${newId} 已存在，請使用其他編號。`);
+            return;
+        }
+
+        const oldEmployeeData = data.employees[originalEmployeeId];
+        delete data.employees[originalEmployeeId];
+        data.employees[newId] = oldEmployeeData;
+        data.employees[newId].name = name;
+        data.employees[newId].department = department;
+        data.employees[newId].position = position;
+        data.employees[newId].salary = salary;
+
+        if (!data.positions.includes(position) && position !== '其他') {
+            data.positions.push(position);
+        }
+        
+        saveData(data);
+        alert('員工資料已成功更新。');
+        renderEmployeeTable();
+        closeEditModal();
+    }
+    
+    // 薪資與績效管理功能
+    function updateSalary(type) {
+        const amount = parseFloat(document.getElementById('salaryAmount').value);
+        const note = document.getElementById('salaryNote').value || '無備註';
+        
+        if (isNaN(amount) || amount <= 0) {
+            alert('請輸入有效的金額。');
+            return;
+        }
+        
+        const data = loadData();
+        const employee = data.employees[currentEmployeeId];
+        
+        let finalAmount = amount;
+        if (type === 'deduction') {
+            finalAmount = -Math.abs(amount);
+        }
+
+        employee.salary += finalAmount;
+        employee.salaryHistory.push({
+            date: new Date().toISOString(),
+            type: type,
+            amount: finalAmount,
+            note: note
+        });
+
+        saveData(data);
+        alert(`已成功調整員工 ${employee.name} 的薪資。`);
+        renderEmployeeDetails(currentEmployeeId, 'detailsContent');
+        renderEmployeeTable();
+    }
+    
+    function setPerformance() {
+        const level = document.getElementById('performanceLevel').value;
+        const data = loadData();
+        const employee = data.employees[currentEmployeeId];
+        
+        employee.performance = level;
+        saveData(data);
+        alert(`已成功設定員工 ${employee.name} 的績效等級為 ${level}。`);
+        renderEmployeeDetails(currentEmployeeId, 'detailsContent');
+        renderEmployeeTable();
+    }
+
+    // 打卡功能
+    function clockIn(id, type) {
+        if (!id) {
+            alert('請先登入。');
+            return;
+        }
+
+        const data = loadData();
+        const employee = data.employees[id];
+        
+        if (employee.attendance.length > 0 && !employee.attendance[employee.attendance.length - 1].end_time) {
+            alert('該員工今天已打卡上班，請勿重複打卡。');
+            return;
+        }
+        
+        employee.attendance.push({ start_time: new Date().toISOString() });
+        saveData(data);
+        
+        if (type === 'manager') {
+            alert(`已成功為員工 ${employee.name} 代打卡上班！`);
+            renderEmployeeDetails(id, 'detailsContent');
+        } else {
+            alert(`員工 ${employee.name} 成功打卡上班！`);
+            renderEmployeeDetails(id, 'personalDetailsContent');
+        }
+    }
+
+    function clockOut(id, type) {
+        if (!id) {
+            alert('請先登入。');
+            return;
+        }
+
+        const data = loadData();
+        const employee = data.employees[id];
+        
+        if (employee.attendance.length === 0 || employee.attendance[employee.attendance.length - 1].end_time) {
+            alert('該員工尚未打卡上班，無法打卡下班。');
+            return;
+        }
+        
+        employee.attendance[employee.attendance.length - 1].end_time = new Date().toISOString();
+        saveData(data);
+        
+        if (type === 'manager') {
+            alert(`已成功為員工 ${employee.name} 代打卡下班！`);
+            renderEmployeeDetails(id, 'detailsContent');
+        } else {
+            alert(`員工 ${employee.name} 成功打卡下班！`);
+            renderEmployeeDetails(id, 'personalDetailsContent');
+        }
+    }
+    
+    // 初始化頁面
+    window.onload = () => {
+        const data = loadData();
+        populatePositionSelect('addPosition', data.positions);
+        showLoginScreen();
+    };
+</script>
+
+</body>
+</html>
