@@ -835,7 +835,90 @@
         populatePositionSelect('addPosition', data.positions);
         showLoginScreen();
     };
+/* ===============================
+請假系統（新增）
+=============================== */
+
+function openLeaveModal(){
+document.getElementById("leaveModal").style.display="block";
+}
+
+function closeLeaveModal(){
+document.getElementById("leaveModal").style.display="none";
+}
+
+function submitLeave(){
+
+let type=document.querySelector('input[name="leaveType"]:checked');
+
+if(!type){
+alert("請選擇請假類型");
+return;
+}
+
+let start=document.getElementById("leaveStart").value;
+let end=document.getElementById("leaveEnd").value;
+let reason=document.getElementById("leaveReason").value;
+
+if(!start || !end || !reason){
+alert("請填寫請假必填欄位");
+return;
+}
+
+let data=loadData();
+
+if(!data.leaves){
+data.leaves=[];
+}
+
+let employee=data.employees[currentEmployeeId];
+
+data.leaves.push({
+id:Date.now(),
+employeeId:currentEmployeeId,
+employeeName:employee.name,
+type:type.value,
+start:start,
+end:end,
+reason:reason,
+note:document.getElementById("leaveNote").value || "",
+status:"審核中"
+});
+
+saveData(data);
+
+alert("請假申請成功");
+
+closeLeaveModal();
+
+viewAllLeaves();
+}
+
+function viewAllLeaves(){
+
+let data=loadData();
+
+if(!data.leaves){
+data.leaves=[];
+}
+
+let html="<h3>請假紀錄</h3>";
+
+data.leaves.forEach(l=>{
+html+=`
+<hr>
+<p>員工：${l.employeeId} ${l.employeeName}</p>
+<p>類型：${l.type}</p>
+<p>時間：${l.start} ~ ${l.end}</p>
+<p>事由：${l.reason}</p>
+<p>狀態：${l.status}</p>
+`;
+});
+
+document.getElementById("personalDetailsContent").innerHTML=html;
+}
 </script>
 
 </body>
+
 </html>
