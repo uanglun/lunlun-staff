@@ -406,30 +406,57 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
-    // 登入功能
-    function login() {
-        const employeeId = document.getElementById('employeeIdInput').value.trim().toUpperCase();
-        const data = loadData();
-        const employee = data.employees[employeeId];
+    // ===== 登入功能 =====
 
-        let loginType = '';
-        if (employeeId === 'ADMIN_LUN' || (employee && employee.position === '管理員')) {
-            loginType = 'admin';
-        } else if (employee && modifiablePositions.includes(employee.position)) {
-            loginType = 'manager_full';
-        } else if (employee && viewablePositions.includes(employee.position)) {
-            loginType = 'manager_view';
-        } else if (employee) {
-            loginType = 'employee';
-        } else {
-            alert('員工編號不存在。');
-            return;
-        }
+let currentEmployeeId = null;
 
-        currentEmployeeId = employeeId;
-        document.getElementById('authBtn').textContent = '登出';
-        renderWelcomePage(loginType);
+function login() {
+    const input = document.getElementById('employeeIdInput');
+    if (!input) {
+        alert("找不到輸入框 employeeIdInput");
+        return;
     }
+
+    const employeeId = input.value.trim().toUpperCase();
+    if (!employeeId) {
+        alert("請輸入員工編號");
+        return;
+    }
+
+    const data = loadData();
+    const employee = data.employees[employeeId];
+
+    let loginType = '';
+
+    if (employeeId === 'ADMIN_LUN') {
+        loginType = 'admin';
+    } 
+    else if (employee && employee.position === '管理員') {
+        loginType = 'admin';
+    }
+    else if (employee && modifiablePositions.includes(employee.position)) {
+        loginType = 'manager_full';
+    } 
+    else if (employee && viewablePositions.includes(employee.position)) {
+        loginType = 'manager_view';
+    } 
+    else if (employee) {
+        loginType = 'employee';
+    } 
+    else {
+        alert('員工編號不存在');
+        return;
+    }
+
+    currentEmployeeId = employeeId;
+
+    const authBtn = document.getElementById('authBtn');
+    if (authBtn) {
+        authBtn.textContent = '登出';
+    }
+
+    renderWelcomePage(loginType);
+}
     
     function renderWelcomePage(type) {
         const welcomeButtons = document.getElementById('welcomeButtons');
@@ -949,3 +976,4 @@ function viewAllLeaves() {
 
     document.getElementById("personalDetailsContent").innerHTML = html;
 }
+
