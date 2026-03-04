@@ -184,7 +184,7 @@
                 <label for="employeeIdInput">請輸入員工編號:</label>
                 <input type="text" id="employeeIdInput">
             </div>
-            <button class="btn" onclick="login()">登入</button>
+            <button id="loginBtn">登入</button>
         </div>
     </div>
     
@@ -196,7 +196,10 @@
                 </div>
         </div>
     </div>
-
+// 綁定登入按鈕事件（不使用 onclick）
+document.getElementById("loginBtn").addEventListener("click", function () {
+    login();
+});
     <div id="managerPage" style="display:none;">
         <hr>
         <div class="section" id="addEmployeeSection">
@@ -976,4 +979,8 @@ function viewAllLeaves() {
 
     document.getElementById("personalDetailsContent").innerHTML = html;
 }
+</script>
+</body>
+</html>
+
 
