@@ -835,90 +835,117 @@
         populatePositionSelect('addPosition', data.positions);
         showLoginScreen();
     };
-/* ===============================
-請假系統（新增）
+    /* ===============================
+   請假系統完整版
 =============================== */
 
-function openLeaveModal(){
-document.getElementById("leaveModal").style.display="block";
+const LEAVE_KEY = "employee_leave_data";
+
+/* 開啟請假視窗 */
+function openLeaveModal() {
+    document.getElementById("leaveModal").style.display = "block";
 }
 
-function closeLeaveModal(){
-document.getElementById("leaveModal").style.display="none";
+/* 關閉請假視窗 */
+function closeLeaveModal() {
+    document.getElementById("leaveModal").style.display = "none";
 }
 
-function submitLeave(){
+/* 送出請假申請 */
+function submitLeave() {
 
-let type=document.querySelector('input[name="leaveType"]:checked');
+    const type = document.querySelector('input[name="leaveType"]:checked');
 
-if(!type){
-alert("請選擇請假類型");
-return;
+    if (!type) {
+        alert("請選擇請假類型");
+        return;
+    }
+
+    const start = document.getElementById("leaveStart").value;
+    const end = document.getElementById("leaveEnd").value;
+    const reason = document.getElementById("leaveReason").value.trim();
+    const note = document.getElementById("leaveNote").value.trim();
+
+    if (!start || !end || !reason) {
+        alert("請填寫必填欄位");
+        return;
+    }
+
+    let data = loadData();
+
+    if (!data.leaves) {
+        data.leaves = [];
+    }
+
+    const employee = data.employees[currentEmployeeId];
+
+    if (!employee) {
+        alert("找不到員工資料");
+        return;
+    }
+
+    const newLeave = {
+        id: Date.now(),
+        employeeId: currentEmployeeId,
+        employeeName: employee.name,
+        department: employee.department || "未設定",
+        type: type.value,
+        start: start,
+        end: end,
+        reason: reason,
+        note: note,
+        status: "審核中",
+        approvalFlow: [
+            "單位主管",
+            "副總經理",
+            "總經理",
+            "副董事長",
+            "董事長"
+        ],
+        currentStep: 0,
+        history: []
+    };
+
+    data.leaves.push(newLeave);
+
+    saveData(data);
+
+    alert("請假申請成功！");
+
+    closeLeaveModal();
+
+    viewAllLeaves();
 }
 
-let start=document.getElementById("leaveStart").value;
-let end=document.getElementById("leaveEnd").value;
-let reason=document.getElementById("leaveReason").value;
+/* 查看請假紀錄 */
+function viewAllLeaves() {
 
-if(!start || !end || !reason){
-alert("請填寫請假必填欄位");
-return;
+    let data = loadData();
+
+    if (!data.leaves) {
+        data.leaves = [];
+    }
+
+    let html = "<h3>請假紀錄</h3>";
+
+    if (data.leaves.length === 0) {
+        html += "<p>目前沒有請假紀錄</p>";
+    }
+
+    data.leaves.forEach(l => {
+
+        html += `
+            <hr>
+            <p><b>員工：</b>${l.employeeId} ${l.employeeName}</p>
+            <p><b>部門：</b>${l.department}</p>
+            <p><b>類型：</b>${l.type}</p>
+            <p><b>時間：</b>${l.start} ~ ${l.end}</p>
+            <p><b>事由：</b>${l.reason}</p>
+            <p><b>備註：</b>${l.note || "無"}</p>
+            <p><b>狀態：</b>${l.status}</p>
+            <p><b>目前審核階段：</b>${l.approvalFlow[l.currentStep]}</p>
+        `;
+    });
+
+    document.getElementById("personalDetailsContent").innerHTML = html;
 }
-
-let data=loadData();
-
-if(!data.leaves){
-data.leaves=[];
-}
-
-let employee=data.employees[currentEmployeeId];
-
-data.leaves.push({
-id:Date.now(),
-employeeId:currentEmployeeId,
-employeeName:employee.name,
-type:type.value,
-start:start,
-end:end,
-reason:reason,
-note:document.getElementById("leaveNote").value || "",
-status:"審核中"
-});
-
-saveData(data);
-
-alert("請假申請成功");
-
-closeLeaveModal();
-
-viewAllLeaves();
-}
-
-function viewAllLeaves(){
-
-let data=loadData();
-
-if(!data.leaves){
-data.leaves=[];
-}
-
-let html="<h3>請假紀錄</h3>";
-
-data.leaves.forEach(l=>{
-html+=`
-<hr>
-<p>員工：${l.employeeId} ${l.employeeName}</p>
-<p>類型：${l.type}</p>
-<p>時間：${l.start} ~ ${l.end}</p>
-<p>事由：${l.reason}</p>
-<p>狀態：${l.status}</p>
-`;
-});
-
-document.getElementById("personalDetailsContent").innerHTML=html;
-}
-</script>
-
-</body>
-
-</html>
