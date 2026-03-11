@@ -1,57 +1,68 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>員工管理系統</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
 body{
-font-family:Arial;
-margin:20px;
-background:#f4f4f4;
+font-family:"Segoe UI",sans-serif;
+margin:0;
+background:linear-gradient(135deg,#6dd5fa,#2980b9);
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .container{
-max-width:900px;
-margin:auto;
-background:#fff;
-padding:20px 30px;
-border-radius:8px;
-box-shadow:0 4px 6px rgba(0,0,0,0.1);
+width:100%;
+max-width:1100px;
+background:white;
+border-radius:12px;
+box-shadow:0 15px 40px rgba(0,0,0,.2);
+padding:30px 40px;
+position:relative;
 }
 
-h1{
+.center{
 text-align:center;
 }
 
-.section{
-margin-bottom:30px;
-}
-
-.form-group{
-margin-bottom:15px;
-}
-
-.form-group input,.form-group select{
+input,select,textarea{
 width:100%;
-padding:8px;
+padding:10px;
+margin:6px 0 12px;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
-.btn{
-background:#5cb85c;
-color:white;
-padding:10px 15px;
+button{
+padding:10px 18px;
 border:none;
-border-radius:4px;
+border-radius:6px;
 cursor:pointer;
-margin-right:10px;
+font-weight:bold;
+color:white;
+margin:5px;
 }
 
-.btn-info{background:#5bc0de;}
-.btn-secondary{background:#f0ad4e;}
-.btn-danger{background:#d9534f;}
+.btn-blue{background:#3498db;}
+.btn-green{background:#2ecc71;}
+.btn-orange{background:#f39c12;}
+.btn-red{background:#e74c3c;}
+.btn-purple{background:#8e44ad;}
+
+button:hover{opacity:.9;}
+
+.topbar{
+position:absolute;
+top:15px;
+right:20px;
+}
+
+.hidden{display:none;}
 
 table{
 width:100%;
@@ -61,427 +72,462 @@ margin-top:20px;
 
 th,td{
 border:1px solid #ddd;
-padding:10px;
+padding:8px;
+text-align:center;
 }
 
 th{
-background:#f2f2f2;
+background:#3498db;
+color:white;
 }
 
-.modal{
-display:none;
-position:fixed;
-left:0;
-top:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.4);
-}
-
-.modal-content{
-background:white;
-margin:10% auto;
-padding:20px;
-width:400px;
-border-radius:8px;
-}
-
-.close-btn{
-float:right;
-font-size:22px;
-cursor:pointer;
-}
-
-.login-box{
-text-align:center;
-margin-top:80px;
+.section{
+margin-top:25px;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>員工管理系統</h1>
+<div class="topbar">
+<button class="btn-red hidden" id="logoutBtn" onclick="logout()">登出</button>
+</div>
 
-<!-- 登入頁 -->
-<div id="loginPage">
+<h1 class="center">員工管理系統</h1>
 
-<div class="login-box">
+<!-- 登入 -->
+<div id="loginPage" class="center">
+<h3>員工登入</h3>
+<input id="loginId" placeholder="輸入員工編號">
+<button class="btn-blue" onclick="login()">登入</button>
+</div>
 
-<h2>員工登入</h2>
+<!-- 首頁 -->
+<div id="homePage" class="hidden center">
 
-<input id="employeeIdInput" placeholder="輸入員工編號">
+<h3 id="welcomeText"></h3>
 
-<br><br>
+<button class="btn-green" onclick="clockIn()">上班打卡</button>
+<button class="btn-orange" onclick="clockOut()">下班打卡</button>
 
-<button class="btn" onclick="login()">登入</button>
+<br>
 
+<button class="btn-blue" onclick="openLeaveForm()">請假申請</button>
+<button class="btn-purple" onclick="showLeaves()">查看請假</button>
+
+<br>
+
+<button id="manageBtn" class="btn-orange hidden" onclick="openManage()">員工管理</button>
+<button id="reviewBtn" class="btn-green hidden" onclick="openReview()">審核假單</button>
+
+</div>
+
+<!-- 請假 -->
+<div id="leavePage" class="hidden">
+
+<h3 class="center">請假申請</h3>
+
+<label>請假類型</label>
+<label><input type="radio" name="leaveType" value="休假">休假</label>
+<label><input type="radio" name="leaveType" value="加班補休">加班補休</label>
+<label><input type="radio" name="leaveType" value="出差">出差</label>
+<label><input type="radio" name="leaveType" value="病假">病假</label>
+<label><input type="radio" name="leaveType" value="家庭照顧假">家庭照顧假</label>
+<label><input type="radio" name="leaveType" value="身心調適假">身心調適假</label>
+<label><input type="radio" name="leaveType" value="喪假">喪假</label>
+
+<label>開始時間</label>
+<input type="datetime-local" id="start">
+
+<label>結束時間</label>
+<input type="datetime-local" id="end">
+
+<label>請假事由</label>
+<textarea id="reason"></textarea>
+
+<label>請假備註</label>
+<textarea id="note"></textarea>
+
+<div class="center">
+<button class="btn-green" onclick="submitLeave()">送出</button>
+<button class="btn-blue" onclick="backHome()">返回</button>
 </div>
 
 </div>
 
-<!-- 歡迎頁 -->
-<div id="welcomePage" style="display:none">
+<!-- 假單列表 -->
+<div id="leaveListPage" class="hidden">
 
-<h2>歡迎使用系統</h2>
+<h3 class="center">請假紀錄</h3>
 
-<div id="welcomeButtons"></div>
+<table>
+<thead>
+<tr>
+<th>員工編號</th>
+<th>姓名</th>
+<th>類型</th>
+<th>時間</th>
+<th>狀態</th>
+</tr>
+</thead>
+<tbody id="leaveTable"></tbody>
+</table>
+
+<div class="center">
+<button class="btn-blue" onclick="backHome()">返回</button>
+</div>
 
 </div>
 
-<!-- 管理頁 -->
-<div id="managerPage" style="display:none">
+<!-- 員工管理 -->
+<div id="managePage" class="hidden">
 
-<h2>新增員工</h2>
+<h3 class="center">新增員工</h3>
 
-<div class="form-group">
-<input id="addId" placeholder="員工編號">
-</div>
+<input id="empId" placeholder="員工編號">
+<input id="empName" placeholder="員工姓名">
+<input id="empSalary" placeholder="員工薪資">
 
-<div class="form-group">
-<input id="addName" placeholder="姓名">
-</div>
-
-<div class="form-group">
-<select id="addDepartment">
-<option>資訊部門</option>
-<option>系統部門</option>
-<option>管理部門</option>
+<select id="empRole">
+<option>職員</option>
+<option>主管</option>
+<option>副總</option>
+<option>總經理</option>
+<option>副董事長</option>
+<option>董事長</option>
 </select>
+
+<select id="empDept">
+<option>管理部門</option>
+<option>資訊部門</option>
+<option>金融部門</option>
+<option>人事部門</option>
+</select>
+
+<div class="center">
+<button class="btn-green" onclick="addEmployee()">新增員工</button>
 </div>
 
-<div class="form-group">
-<input id="addPosition" placeholder="職位">
-</div>
-
-<div class="form-group">
-<input id="addSalary" type="number" placeholder="薪資">
-</div>
-
-<button class="btn" onclick="addEmployee()">新增員工</button>
-
-<hr>
-
-<h2>員工列表</h2>
-
-<table id="employeeTable">
-
+<table>
 <thead>
 <tr>
 <th>編號</th>
 <th>姓名</th>
-<th>部門</th>
-<th>職位</th>
 <th>薪資</th>
+<th>職位</th>
+<th>部門</th>
 </tr>
 </thead>
-
-<tbody></tbody>
-
+<tbody id="empTable"></tbody>
 </table>
 
-</div>
-
-<!-- 員工頁 -->
-<div id="employeePage" style="display:none">
-
-<h2>個人資料</h2>
-
-<div id="personalDetails"></div>
-
+<div class="center">
+<button class="btn-blue" onclick="backHome()">返回</button>
 </div>
 
 </div>
 
+<!-- 審核 -->
+<div id="reviewPage" class="hidden">
 
-<!-- 請假視窗 -->
+<h3 class="center">假單審核</h3>
 
-<div id="leaveModal" class="modal">
+<table>
+<thead>
+<tr>
+<th>員工</th>
+<th>類型</th>
+<th>時間</th>
+<th>狀態</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody id="reviewTable"></tbody>
+</table>
 
-<div class="modal-content">
-
-<span class="close-btn" onclick="closeLeaveModal()">×</span>
-
-<h2>請假申請</h2>
-
-<label><input type="radio" name="leaveType" value="事假">事假</label>
-<label><input type="radio" name="leaveType" value="病假">病假</label>
-<label><input type="radio" name="leaveType" value="特休">特休</label>
-
-<br><br>
-
-<input type="date" id="leaveStart">
-
-<br><br>
-
-<input type="date" id="leaveEnd">
-
-<br><br>
-
-<input id="leaveReason" placeholder="請假原因">
-
-<br><br>
-
-<button class="btn" onclick="submitLeave()">送出請假</button>
-
+<div class="center">
+<button class="btn-blue" onclick="backHome()">返回</button>
 </div>
 
 </div>
 
+</div>
 
 <script>
 
-const STORAGE_KEY="employee_manager_data";
-const LEAVE_KEY="employee_leave_data";
+let currentUser=null;
 
-let currentEmployeeId=null;
+const roleRank={
+"職員":1,
+"主管":2,
+"副總":3,
+"總經理":4,
+"副董事長":5,
+"董事長":6,
+"管理員":7
+};
 
-function loadData(){
+function load(key){
+return JSON.parse(localStorage.getItem(key)||"{}");
+}
 
-const data=localStorage.getItem(STORAGE_KEY);
+function save(key,data){
+localStorage.setItem(key,JSON.stringify(data));
+}
 
-if(data) return JSON.parse(data);
+function init(){
 
-return {employees:{}};
+let employees=load("employees");
+
+if(!employees["admin_lun"]){
+
+employees["admin_lun"]={
+id:"admin_lun",
+name:"系統管理員",
+salary:0,
+role:"管理員",
+dept:"管理部門"
+};
+
+save("employees",employees);
 
 }
 
-function saveData(data){
-
-localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-
 }
+
+init();
 
 function login(){
 
-const id=document.getElementById("employeeIdInput").value.trim().toUpperCase();
+const id=document.getElementById("loginId").value.trim();
 
-if(!id){alert("請輸入員工編號");return;}
+const employees=load("employees");
 
-const data=loadData();
-
-const emp=data.employees[id];
-
-if(id==="ADMIN_LUN"|| (emp && emp.position==="管理員")){
-
-currentEmployeeId=id;
-
-showPage("welcomePage");
-
-document.getElementById("welcomeButtons").innerHTML=`
-<button class="btn" onclick="enterManagerPage()">進入管理系統</button>
-`;
-
+if(!employees[id]){
+alert("員工不存在");
 return;
 }
 
-if(!emp){alert("員工不存在");return;}
+currentUser=employees[id];
 
-currentEmployeeId=id;
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("homePage").classList.remove("hidden");
 
-showPage("welcomePage");
+document.getElementById("logoutBtn").classList.remove("hidden");
 
-document.getElementById("welcomeButtons").innerHTML=`
-<button class="btn" onclick="enterEmployeePage()">查看個人資料</button>
-<button class="btn btn-info" onclick="clockIn()">上班打卡</button>
-<button class="btn btn-info" onclick="clockOut()">下班打卡</button>
-<button class="btn btn-secondary" onclick="openLeaveModal()">請假申請</button>
-`;
+document.getElementById("welcomeText").innerText=
+`歡迎 ${currentUser.name} (${currentUser.role})`;
 
-}
+if(roleRank[currentUser.role]>=2)
+document.getElementById("reviewBtn").classList.remove("hidden");
 
-function showPage(id){
-
-document.getElementById("loginPage").style.display="none";
-document.getElementById("welcomePage").style.display="none";
-document.getElementById("managerPage").style.display="none";
-document.getElementById("employeePage").style.display="none";
-
-document.getElementById(id).style.display="block";
+if(currentUser.role==="管理員")
+document.getElementById("manageBtn").classList.remove("hidden");
 
 }
 
-function enterManagerPage(){
+function logout(){location.reload();}
 
-showPage("managerPage");
+function backHome(){
 
-renderEmployeeTable();
-
-}
-
-function enterEmployeePage(){
-
-showPage("employeePage");
-
-renderEmployeeDetails();
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById("homePage").classList.remove("hidden");
 
 }
 
-function addEmployee(){
+function clockIn(){alert("上班打卡成功 "+new Date().toLocaleString());}
+function clockOut(){alert("下班打卡成功 "+new Date().toLocaleString());}
 
-const id=document.getElementById("addId").value.toUpperCase();
+function openLeaveForm(){
 
-const name=document.getElementById("addName").value;
-
-const dep=document.getElementById("addDepartment").value;
-
-const pos=document.getElementById("addPosition").value;
-
-const salary=parseFloat(document.getElementById("addSalary").value);
-
-if(!id||!name||!pos||!salary){alert("資料不完整");return;}
-
-const data=loadData();
-
-data.employees[id]={
-
-name,
-department:dep,
-position:pos,
-salary,
-attendance:[]
-
-};
-
-saveData(data);
-
-alert("新增成功");
-
-renderEmployeeTable();
-
-}
-
-function renderEmployeeTable(){
-
-const body=document.querySelector("#employeeTable tbody");
-
-body.innerHTML="";
-
-const data=loadData();
-
-for(let id in data.employees){
-
-const emp=data.employees[id];
-
-body.innerHTML+=`
-<tr>
-<td>${id}</td>
-<td>${emp.name}</td>
-<td>${emp.department}</td>
-<td>${emp.position}</td>
-<td>${emp.salary}</td>
-</tr>
-`;
-
-}
-
-}
-
-function renderEmployeeDetails(){
-
-const data=loadData();
-
-const emp=data.employees[currentEmployeeId];
-
-document.getElementById("personalDetails").innerHTML=`
-
-<p>姓名：${emp.name}</p>
-<p>部門：${emp.department}</p>
-<p>職位：${emp.position}</p>
-<p>薪資：${emp.salary}</p>
-
-`;
-
-}
-
-function clockIn(){
-
-const data=loadData();
-
-const emp=data.employees[currentEmployeeId];
-
-emp.attendance.push({start:new Date().toLocaleString()});
-
-saveData(data);
-
-alert("上班打卡成功");
-
-}
-
-function clockOut(){
-
-const data=loadData();
-
-const emp=data.employees[currentEmployeeId];
-
-if(emp.attendance.length===0){alert("尚未打卡");return;}
-
-emp.attendance[emp.attendance.length-1].end=new Date().toLocaleString();
-
-saveData(data);
-
-alert("下班打卡成功");
-
-}
-
-
-/* ===== 請假系統 ===== */
-
-function openLeaveModal(){
-
-document.getElementById("leaveModal").style.display="block";
-
-}
-
-function closeLeaveModal(){
-
-document.getElementById("leaveModal").style.display="none";
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById("leavePage").classList.remove("hidden");
 
 }
 
 function submitLeave(){
 
-const type=document.querySelector('input[name="leaveType"]:checked');
+const type=document.querySelector("input[name=leaveType]:checked");
 
-const start=document.getElementById("leaveStart").value;
+if(!type){alert("請選擇請假類型");return;}
 
-const end=document.getElementById("leaveEnd").value;
+const start=document.getElementById("start").value;
+const end=document.getElementById("end").value;
 
-const reason=document.getElementById("leaveReason").value;
+if(!start||!end){alert("請填時間");return;}
 
-if(!type||!start||!end){
+let leaves=load("leaves");
 
-alert("請填寫完整請假資料");
+const id=Date.now();
 
-return;
-
-}
-
-let leaves=JSON.parse(localStorage.getItem(LEAVE_KEY)||"[]");
-
-leaves.push({
-
-employeeId:currentEmployeeId,
-
+leaves[id]={
+id,
+empId:currentUser.id,
+name:currentUser.name,
+dept:currentUser.dept,
 type:type.value,
+time:start+"~"+end,
+stage:"主管",
+status:"審核中"
+};
 
-start,
-
-end,
-
-reason
-
-});
-
-localStorage.setItem(LEAVE_KEY,JSON.stringify(leaves));
+save("leaves",leaves);
 
 alert("請假申請成功");
 
-closeLeaveModal();
+backHome();
+
+}
+
+function showLeaves(){
+
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById("leaveListPage").classList.remove("hidden");
+
+const leaves=load("leaves");
+const table=document.getElementById("leaveTable");
+
+table.innerHTML="";
+
+Object.values(leaves).forEach(l=>{
+
+table.innerHTML+=`
+<tr>
+<td>${l.empId}</td>
+<td>${l.name}</td>
+<td>${l.type}</td>
+<td>${l.time}</td>
+<td>${l.stage}審核</td>
+</tr>
+`;
+
+});
+
+}
+
+function openManage(){
+
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById("managePage").classList.remove("hidden");
+
+renderEmployees();
+
+}
+
+function addEmployee(){
+
+const id=document.getElementById("empId").value;
+const name=document.getElementById("empName").value;
+const salary=document.getElementById("empSalary").value;
+const role=document.getElementById("empRole").value;
+const dept=document.getElementById("empDept").value;
+
+if(!id||!name){alert("資料不完整");return;}
+
+let employees=load("employees");
+
+employees[id]={id,name,salary,role,dept};
+
+save("employees",employees);
+
+renderEmployees();
+
+}
+
+function renderEmployees(){
+
+const employees=load("employees");
+const table=document.getElementById("empTable");
+
+table.innerHTML="";
+
+Object.values(employees).forEach(e=>{
+
+table.innerHTML+=`
+<tr>
+<td>${e.id}</td>
+<td>${e.name}</td>
+<td>${e.salary}</td>
+<td>${e.role}</td>
+<td>${e.dept}</td>
+</tr>
+`;
+
+});
+
+}
+
+function openReview(){
+
+document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+document.getElementById("reviewPage").classList.remove("hidden");
+
+renderReview();
+
+}
+
+function renderReview(){
+
+const leaves=load("leaves");
+const table=document.getElementById("reviewTable");
+
+table.innerHTML="";
+
+Object.values(leaves).forEach(l=>{
+
+if(l.status!=="審核中") return;
+
+if(l.stage!==currentUser.role && currentUser.role!=="管理員") return;
+
+table.innerHTML+=`
+<tr>
+<td>${l.name}</td>
+<td>${l.type}</td>
+<td>${l.time}</td>
+<td>${l.stage}</td>
+<td>
+<button class="btn-green" onclick="approve(${l.id})">批准</button>
+<button class="btn-red" onclick="reject(${l.id})">駁回</button>
+</td>
+</tr>
+`;
+
+});
+
+}
+
+function approve(id){
+
+let leaves=load("leaves");
+
+const order=["主管","副總","總經理","副董事長","董事長"];
+
+let idx=order.indexOf(leaves[id].stage);
+
+if(idx===order.length-1){
+leaves[id].status="完成";
+}else{
+leaves[id].stage=order[idx+1];
+}
+
+save("leaves",leaves);
+
+renderReview();
+
+}
+
+function reject(id){
+
+let leaves=load("leaves");
+
+leaves[id].status="已駁回";
+
+save("leaves",leaves);
+
+renderReview();
 
 }
 
