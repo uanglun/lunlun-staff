@@ -3,48 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <title>員工管理系統</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
 body{
-font-family:"Segoe UI",sans-serif;
+font-family:Arial;
 margin:0;
 background:linear-gradient(135deg,#6dd5fa,#2980b9);
 min-height:100vh;
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
 }
 
 .container{
 width:100%;
 max-width:1100px;
 background:white;
-border-radius:12px;
+border-radius:15px;
+padding:30px;
 box-shadow:0 15px 40px rgba(0,0,0,.2);
-padding:30px 40px;
-position:relative;
 }
 
-.center{
-text-align:center;
+.topbar{
+position:fixed;
+top:20px;
+right:30px;
+z-index:2000;
 }
 
-input,select,textarea{
-width:100%;
-padding:10px;
-margin:6px 0 12px;
-border-radius:6px;
-border:1px solid #ccc;
-}
+.center{text-align:center;}
 
 button{
 padding:10px 18px;
 border:none;
 border-radius:6px;
 cursor:pointer;
-font-weight:bold;
 color:white;
+font-weight:bold;
 margin:5px;
 }
 
@@ -52,14 +48,13 @@ margin:5px;
 .btn-green{background:#2ecc71;}
 .btn-orange{background:#f39c12;}
 .btn-red{background:#e74c3c;}
-.btn-purple{background:#8e44ad;}
 
-button:hover{opacity:.9;}
-
-.topbar{
-position:absolute;
-top:15px;
-right:20px;
+input,select,textarea{
+width:100%;
+padding:8px;
+margin:5px 0 12px;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
 .hidden{display:none;}
@@ -81,8 +76,30 @@ background:#3498db;
 color:white;
 }
 
-.section{
-margin-top:25px;
+/* modal */
+
+.modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.5);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:5000;
+}
+
+.modal.active{
+display:flex;
+}
+
+.modal-content{
+background:white;
+padding:25px;
+border-radius:10px;
+width:420px;
 }
 
 </style>
@@ -90,22 +107,19 @@ margin-top:25px;
 
 <body>
 
-<div class="container">
-
 <div class="topbar">
-<button class="btn-red hidden" id="logoutBtn" onclick="logout()">登出</button>
+<button class="btn-red" onclick="logout()">登出</button>
 </div>
+
+<div class="container">
 
 <h1 class="center">員工管理系統</h1>
 
-<!-- 登入 -->
 <div id="loginPage" class="center">
-<h3>員工登入</h3>
 <input id="loginId" placeholder="輸入員工編號">
 <button class="btn-blue" onclick="login()">登入</button>
 </div>
 
-<!-- 首頁 -->
 <div id="homePage" class="hidden center">
 
 <h3 id="welcomeText"></h3>
@@ -115,41 +129,31 @@ margin-top:25px;
 
 <br>
 
-<button class="btn-blue" onclick="openLeaveForm()">請假申請</button>
-<button class="btn-purple" onclick="showLeaves()">查看請假</button>
+<button class="btn-blue" onclick="openLeave()">請假申請</button>
+<button id="btnApproveLeave" class="btn-red hidden" onclick="openApproval()">假單審核</button>
 
 <br>
 
-<button id="manageBtn" class="btn-orange hidden" onclick="openManage()">員工管理</button>
-<button id="reviewBtn" class="btn-green hidden" onclick="openReview()">審核假單</button>
+<button class="btn-orange" onclick="openManage()">員工管理</button>
 
 </div>
 
-<!-- 請假 -->
 <div id="leavePage" class="hidden">
 
 <h3 class="center">請假申請</h3>
 
-<label>請假類型</label>
-<label><input type="radio" name="leaveType" value="休假">休假</label>
-<label><input type="radio" name="leaveType" value="加班補休">加班補休</label>
-<label><input type="radio" name="leaveType" value="出差">出差</label>
-<label><input type="radio" name="leaveType" value="病假">病假</label>
-<label><input type="radio" name="leaveType" value="家庭照顧假">家庭照顧假</label>
-<label><input type="radio" name="leaveType" value="身心調適假">身心調適假</label>
-<label><input type="radio" name="leaveType" value="喪假">喪假</label>
+<select id="leaveType">
+<option>休假</option>
+<option>病假</option>
+<option>出差</option>
+<option>加班補休</option>
+<option>喪假</option>
+</select>
 
-<label>開始時間</label>
 <input type="datetime-local" id="start">
-
-<label>結束時間</label>
 <input type="datetime-local" id="end">
 
-<label>請假事由</label>
-<textarea id="reason"></textarea>
-
-<label>請假備註</label>
-<textarea id="note"></textarea>
+<textarea id="reason" placeholder="請假原因"></textarea>
 
 <div class="center">
 <button class="btn-green" onclick="submitLeave()">送出</button>
@@ -158,38 +162,35 @@ margin-top:25px;
 
 </div>
 
-<!-- 假單列表 -->
-<div id="leaveListPage" class="hidden">
-
-<h3 class="center">請假紀錄</h3>
+<div id="approvalPage" class="hidden">
+<h3 class="center">假單審核</h3>
 
 <table>
 <thead>
 <tr>
-<th>員工編號</th>
-<th>姓名</th>
-<th>類型</th>
+<th>申請人</th>
+<th>部門</th>
+<th>假別</th>
 <th>時間</th>
-<th>狀態</th>
+<th>原因</th>
+<th>操作</th>
 </tr>
 </thead>
-<tbody id="leaveTable"></tbody>
+<tbody id="approvalTable"></tbody>
 </table>
 
-<div class="center">
+<div class="center" style="margin-top:20px;">
 <button class="btn-blue" onclick="backHome()">返回</button>
 </div>
-
 </div>
 
-<!-- 員工管理 -->
 <div id="managePage" class="hidden">
 
-<h3 class="center">新增員工</h3>
+<h3>新增員工</h3>
 
 <input id="empId" placeholder="員工編號">
-<input id="empName" placeholder="員工姓名">
-<input id="empSalary" placeholder="員工薪資">
+<input id="empName" placeholder="姓名">
+<input id="empSalary" placeholder="薪資">
 
 <select id="empRole">
 <option>職員</option>
@@ -207,9 +208,7 @@ margin-top:25px;
 <option>人事部門</option>
 </select>
 
-<div class="center">
-<button class="btn-green" onclick="addEmployee()">新增員工</button>
-</div>
+<button class="btn-green" onclick="addEmployee()">新增</button>
 
 <table>
 <thead>
@@ -219,37 +218,53 @@ margin-top:25px;
 <th>薪資</th>
 <th>職位</th>
 <th>部門</th>
-</tr>
-</thead>
-<tbody id="empTable"></tbody>
-</table>
-
-<div class="center">
-<button class="btn-blue" onclick="backHome()">返回</button>
-</div>
-
-</div>
-
-<!-- 審核 -->
-<div id="reviewPage" class="hidden">
-
-<h3 class="center">假單審核</h3>
-
-<table>
-<thead>
-<tr>
-<th>員工</th>
-<th>類型</th>
-<th>時間</th>
-<th>狀態</th>
+<th>績效</th>
+<th>獎金</th>
 <th>操作</th>
 </tr>
 </thead>
-<tbody id="reviewTable"></tbody>
+
+<tbody id="empTable"></tbody>
+
 </table>
 
-<div class="center">
 <button class="btn-blue" onclick="backHome()">返回</button>
+
+</div>
+
+</div>
+
+<div id="editModal" class="modal">
+
+<div class="modal-content">
+
+<h3>編輯員工</h3>
+
+<input id="editName" placeholder="姓名">
+<input id="editSalary" placeholder="薪資">
+
+<select id="editRole">
+<option>職員</option>
+<option>主管</option>
+<option>副總</option>
+<option>總經理</option>
+<option>副董事長</option>
+<option>董事長</option>
+</select>
+
+<select id="editDept">
+<option>管理部門</option>
+<option>資訊部門</option>
+<option>金融部門</option>
+<option>人事部門</option>
+</select>
+
+<input id="editBonus" placeholder="獎金">
+<input id="editPerf" placeholder="績效">
+
+<div class="center">
+<button class="btn-green" onclick="saveEdit()">儲存</button>
+<button class="btn-red" onclick="closeModal()">取消</button>
 </div>
 
 </div>
@@ -259,24 +274,12 @@ margin-top:25px;
 <script>
 
 let currentUser=null;
+let editId=null;
 
-const roleRank={
-"職員":1,
-"主管":2,
-"副總":3,
-"總經理":4,
-"副董事長":5,
-"董事長":6,
-"管理員":7
-};
+const roleHierarchy = ["職員", "主管", "副總", "總經理", "副董事長", "董事長"];
 
-function load(key){
-return JSON.parse(localStorage.getItem(key)||"{}");
-}
-
-function save(key,data){
-localStorage.setItem(key,JSON.stringify(data));
-}
+function load(k){return JSON.parse(localStorage.getItem(k)||"{}")}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 
 function init(){
 
@@ -289,7 +292,9 @@ id:"admin_lun",
 name:"系統管理員",
 salary:0,
 role:"管理員",
-dept:"管理部門"
+dept:"管理部門",
+bonus:0,
+performance:0
 };
 
 save("employees",employees);
@@ -302,115 +307,154 @@ init();
 
 function login(){
 
-const id=document.getElementById("loginId").value.trim();
+let id=document.getElementById("loginId").value.trim();
+let employees=load("employees");
 
-const employees=load("employees");
-
-if(!employees[id]){
-alert("員工不存在");
-return;
-}
+if(!employees[id]){alert("員工不存在");return;}
 
 currentUser=employees[id];
 
 document.getElementById("loginPage").classList.add("hidden");
 document.getElementById("homePage").classList.remove("hidden");
 
-document.getElementById("logoutBtn").classList.remove("hidden");
+// 判斷是否顯示假單審核按鈕 (僅職員沒有)
+if(currentUser.role !== "職員"){
+    document.getElementById("btnApproveLeave").classList.remove("hidden");
+} else {
+    document.getElementById("btnApproveLeave").classList.add("hidden");
+}
 
 document.getElementById("welcomeText").innerText=
-`歡迎 ${currentUser.name} (${currentUser.role})`;
-
-if(roleRank[currentUser.role]>=2)
-document.getElementById("reviewBtn").classList.remove("hidden");
-
-if(currentUser.role==="管理員")
-document.getElementById("manageBtn").classList.remove("hidden");
+"歡迎 "+currentUser.name+" ("+currentUser.role+")";
 
 }
 
-function logout(){location.reload();}
+function logout(){location.reload()}
+
+function hideAll(){
+["loginPage","homePage","leavePage","managePage","approvalPage"].forEach(p=>{
+document.getElementById(p).classList.add("hidden")
+})
+}
 
 function backHome(){
-
-document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+hideAll();
 document.getElementById("homePage").classList.remove("hidden");
-
 }
 
-function clockIn(){alert("上班打卡成功 "+new Date().toLocaleString());}
-function clockOut(){alert("下班打卡成功 "+new Date().toLocaleString());}
+function clockIn(){alert("上班打卡成功")}
+function clockOut(){alert("下班打卡成功")}
 
-function openLeaveForm(){
-
-document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+function openLeave(){
+hideAll();
 document.getElementById("leavePage").classList.remove("hidden");
-
 }
 
 function submitLeave(){
 
-const type=document.querySelector("input[name=leaveType]:checked");
-
-if(!type){alert("請選擇請假類型");return;}
-
-const start=document.getElementById("start").value;
-const end=document.getElementById("end").value;
-
-if(!start||!end){alert("請填時間");return;}
-
 let leaves=load("leaves");
+let id=Date.now().toString();
 
-const id=Date.now();
+let roleIdx = roleHierarchy.indexOf(currentUser.role);
+let status = "審核中";
+let nextRole = "";
+
+// 判斷下一位審核者
+if(roleIdx === -1 || roleIdx >= roleHierarchy.length - 1){
+    // 董事長或非階層內的角色(如管理員)直接核准
+    status = "已通過";
+} else {
+    nextRole = roleHierarchy[roleIdx + 1];
+}
 
 leaves[id]={
-id,
-empId:currentUser.id,
-name:currentUser.name,
-dept:currentUser.dept,
-type:type.value,
-time:start+"~"+end,
-stage:"主管",
-status:"審核中"
+    id: id,
+    empId: currentUser.id,
+    empName: currentUser.name,
+    dept: currentUser.dept,
+    type: document.getElementById("leaveType").value,
+    time: document.getElementById("start").value + " ~ " + document.getElementById("end").value,
+    reason: document.getElementById("reason").value,
+    status: status,
+    nextRole: nextRole
 };
 
 save("leaves",leaves);
 
-alert("請假申請成功");
-
+alert("請假申請已送出！");
 backHome();
 
 }
 
-function showLeaves(){
+// 新增：開啟假單審核頁面
+function openApproval(){
+    hideAll();
+    document.getElementById("approvalPage").classList.remove("hidden");
+    renderApprovals();
+}
 
-document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
-document.getElementById("leaveListPage").classList.remove("hidden");
+// 新增：渲染待審核列表
+function renderApprovals(){
+    let leaves = load("leaves");
+    let tbody = document.getElementById("approvalTable");
+    tbody.innerHTML = "";
 
-const leaves=load("leaves");
-const table=document.getElementById("leaveTable");
+    Object.values(leaves).forEach(L => {
+        // 只顯示狀態為審核中，且下一位審核者為當前登入者職位的假單
+        if(L.status === "審核中" && L.nextRole === currentUser.role){
+            
+            // 主管僅能審核同部門的假單，副總以上可跨部門
+            if(currentUser.role === "主管" && L.dept !== currentUser.dept){
+                return;
+            }
 
-table.innerHTML="";
+            tbody.innerHTML += `
+            <tr>
+                <td>${L.empName}</td>
+                <td>${L.dept}</td>
+                <td>${L.type}</td>
+                <td>${L.time}</td>
+                <td>${L.reason}</td>
+                <td>
+                    <button class="btn-green" onclick="processLeave('${L.id}', 'approve')">批准</button>
+                    <button class="btn-red" onclick="processLeave('${L.id}', 'reject')">駁回</button>
+                </td>
+            </tr>
+            `;
+        }
+    });
 
-Object.values(leaves).forEach(l=>{
+    if(tbody.innerHTML === ""){
+        tbody.innerHTML = `<tr><td colspan="6">目前沒有待審核的假單</td></tr>`;
+    }
+}
 
-table.innerHTML+=`
-<tr>
-<td>${l.empId}</td>
-<td>${l.name}</td>
-<td>${l.type}</td>
-<td>${l.time}</td>
-<td>${l.stage}審核</td>
-</tr>
-`;
+// 新增：處理審核動作 (批准/駁回)
+function processLeave(leaveId, action){
+    let leaves = load("leaves");
+    let L = leaves[leaveId];
 
-});
+    if(action === 'reject'){
+        L.status = "已駁回";
+    } else {
+        let currentIdx = roleHierarchy.indexOf(currentUser.role);
+        
+        // 如果已經是最高層級，狀態改為已通過；否則繼續往上送
+        if(currentIdx >= roleHierarchy.length - 1){
+            L.status = "已通過";
+            L.nextRole = "";
+        } else {
+            L.nextRole = roleHierarchy[currentIdx + 1];
+        }
+    }
 
+    save("leaves", leaves);
+    renderApprovals();
 }
 
 function openManage(){
 
-document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
+hideAll();
 document.getElementById("managePage").classList.remove("hidden");
 
 renderEmployees();
@@ -419,17 +463,19 @@ renderEmployees();
 
 function addEmployee(){
 
-const id=document.getElementById("empId").value;
-const name=document.getElementById("empName").value;
-const salary=document.getElementById("empSalary").value;
-const role=document.getElementById("empRole").value;
-const dept=document.getElementById("empDept").value;
-
-if(!id||!name){alert("資料不完整");return;}
-
 let employees=load("employees");
 
-employees[id]={id,name,salary,role,dept};
+let id=document.getElementById("empId").value;
+
+employees[id]={
+id,
+name:document.getElementById("empName").value,
+salary:document.getElementById("empSalary").value,
+role:document.getElementById("empRole").value,
+dept:document.getElementById("empDept").value,
+bonus:0,
+performance:0
+};
 
 save("employees",employees);
 
@@ -439,58 +485,25 @@ renderEmployees();
 
 function renderEmployees(){
 
-const employees=load("employees");
-const table=document.getElementById("empTable");
+let employees=load("employees");
+let empTable = document.getElementById("empTable");
 
-table.innerHTML="";
+empTable.innerHTML="";
 
 Object.values(employees).forEach(e=>{
 
-table.innerHTML+=`
+empTable.innerHTML+=`
 <tr>
 <td>${e.id}</td>
 <td>${e.name}</td>
 <td>${e.salary}</td>
 <td>${e.role}</td>
 <td>${e.dept}</td>
-</tr>
-`;
-
-});
-
-}
-
-function openReview(){
-
-document.querySelectorAll(".container > div").forEach(d=>d.classList.add("hidden"));
-document.getElementById("reviewPage").classList.remove("hidden");
-
-renderReview();
-
-}
-
-function renderReview(){
-
-const leaves=load("leaves");
-const table=document.getElementById("reviewTable");
-
-table.innerHTML="";
-
-Object.values(leaves).forEach(l=>{
-
-if(l.status!=="審核中") return;
-
-if(l.stage!==currentUser.role && currentUser.role!=="管理員") return;
-
-table.innerHTML+=`
-<tr>
-<td>${l.name}</td>
-<td>${l.type}</td>
-<td>${l.time}</td>
-<td>${l.stage}</td>
+<td>${e.performance}</td>
+<td>${e.bonus}</td>
 <td>
-<button class="btn-green" onclick="approve(${l.id})">批准</button>
-<button class="btn-red" onclick="reject(${l.id})">駁回</button>
+<button class="btn-blue" onclick="editEmployee('${e.id}')">編輯</button>
+<button class="btn-red" onclick="deleteEmployee('${e.id}')">刪除</button>
 </td>
 </tr>
 `;
@@ -499,35 +512,59 @@ table.innerHTML+=`
 
 }
 
-function approve(id){
+function editEmployee(id){
 
-let leaves=load("leaves");
+let employees=load("employees");
+let e=employees[id];
 
-const order=["主管","副總","總經理","副董事長","董事長"];
+editId=id;
 
-let idx=order.indexOf(leaves[id].stage);
+document.getElementById("editName").value=e.name;
+document.getElementById("editSalary").value=e.salary;
+document.getElementById("editRole").value=e.role;
+document.getElementById("editDept").value=e.dept;
+document.getElementById("editBonus").value=e.bonus;
+document.getElementById("editPerf").value=e.performance;
 
-if(idx===order.length-1){
-leaves[id].status="完成";
-}else{
-leaves[id].stage=order[idx+1];
-}
-
-save("leaves",leaves);
-
-renderReview();
+document.getElementById("editModal").classList.add("active");
 
 }
 
-function reject(id){
+function saveEdit(){
 
-let leaves=load("leaves");
+let employees=load("employees");
 
-leaves[id].status="已駁回";
+employees[editId].name=document.getElementById("editName").value;
+employees[editId].salary=document.getElementById("editSalary").value;
+employees[editId].role=document.getElementById("editRole").value;
+employees[editId].dept=document.getElementById("editDept").value;
+employees[editId].bonus=Number(document.getElementById("editBonus").value);
+employees[editId].performance=Number(document.getElementById("editPerf").value);
 
-save("leaves",leaves);
+save("employees",employees);
 
-renderReview();
+closeModal();
+renderEmployees();
+
+}
+
+function deleteEmployee(id){
+
+if(!confirm("確定刪除?"))return;
+
+let employees=load("employees");
+
+delete employees[id];
+
+save("employees",employees);
+
+renderEmployees();
+
+}
+
+function closeModal(){
+
+document.getElementById("editModal").classList.remove("active");
 
 }
 
