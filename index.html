@@ -153,9 +153,12 @@ width:420px;
 <select id="leaveType">
 <option>休假</option>
 <option>病假</option>
-<option>出差</option>
+<option>出差(有差旅費)</option>
+<option>出差(無差旅費)</option>    
 <option>加班補休</option>
 <option>喪假</option>
+<option>身心調適假</option>
+<option>家庭照顧假</option>    
 </select>
 <input type="datetime-local" id="start">
 <input type="datetime-local" id="end">
@@ -167,7 +170,7 @@ width:420px;
 </div>
 
 <div id="approvalPage" class="hidden">
-<h3 class="center">待我審核的假單</h3>
+<h3 class="center">待審核的假單</h3>
 <table>
 <thead>
 <tr>
@@ -268,7 +271,6 @@ width:420px;
 
 <label>績效等級：</label>
 <select id="editPerf">
-<option value="未評定">未評定</option>
 <option value="(A)良好">(A)良好</option>
 <option value="(B)普通">(B)普通</option>
 <option value="(C)差">(C)差</option>
@@ -292,7 +294,7 @@ function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function init(){
     let employees=load("employees");
     if(!employees["admin_lun"]){
-        employees["admin_lun"]={id:"admin_lun",name:"系統管理員",salary:0,role:"董事長",dept:"管理部門",bonus:0,performance:"未評定",clocks:[]};
+        employees["admin_lun"]={id:"admin_lun",name:"綸",salary:0,role:"董事長",dept:"管理部門",bonus:0,performance:"未評定",clocks:[]};
         save("employees",employees);
     }
 }
@@ -343,7 +345,6 @@ function clockAction(type){
     if(!currentUser.clocks) currentUser.clocks = [];
     currentUser.clocks.push({type: type, time: now});
     
-    // 同步到資料庫
     employees[currentUser.id].clocks = currentUser.clocks;
     save("employees", employees);
     
@@ -368,7 +369,7 @@ function renderAttendance(){
     if(logs.length === 0) tbody.innerHTML = `<tr><td colspan="2">暫無打卡紀錄</td></tr>`;
 }
 
-// --- 請假與歷史功能 (含容錯) ---
+// --- 請假與歷史功能 ---
 function openLeave(){
     hideAll();
     document.getElementById("leaveTitle").innerText = "請假申請";
@@ -391,13 +392,17 @@ function submitLeave(){
         nextRole = roleHierarchy[roleIdx + 1];
     }
 
+    // 將時間字串中的 T 替換為空白，讓畫面顯示更美觀
+    let startTime = document.getElementById("start").value.replace("T", " ");
+    let endTime = document.getElementById("end").value.replace("T", " ");
+
     leaves[id]={
         id: id,
         empId: currentUser.id,
         empName: currentUser.name,
         dept: currentUser.dept,
         type: document.getElementById("leaveType").value,
-        time: document.getElementById("start").value + " ~ " + document.getElementById("end").value,
+        time: startTime + " ~ " + endTime,
         reason: document.getElementById("reason").value,
         status: status,
         nextRole: nextRole,
@@ -422,8 +427,8 @@ function renderHistory(){
 
     Object.values(leaves).filter(L => L.empId === currentUser.id).forEach(L => {
         let statusText = L.status;
-        if(L.status === "審核中") statusText = `等待 (${L.nextRole || "上級"}) 審核`;
-        if(L.status === "已駁回") statusText = `<span style="color:red">已被 (${L.rejectedBy || "未知主管"}) 駁回</span>`;
+        if(L.status === "審核中") statusText = `等待${L.nextRole || "上級"}審核`;
+        if(L.status === "已駁回") statusText = `<span style="color:red">已被${L.rejectedBy || "未知主管"}駁回</span>`;
         if(L.status === "已全數批准") statusText = `<span style="color:green">已全數批准</span>`;
 
         let actions = L.status === "審核中" ? 
@@ -448,9 +453,12 @@ function editLeave(id){
     document.getElementById("leaveTitle").innerText = "編輯假單";
     document.getElementById("editLeaveId").value = L.id;
     document.getElementById("leaveType").value = L.type;
+    
+    // 讀取時將空白替換回 T，這樣 input type="datetime-local" 才抓得到值
     let times = (L.time || "").split(" ~ ");
-    document.getElementById("start").value = times[0] || "";
-    document.getElementById("end").value = times[1] || "";
+    document.getElementById("start").value = (times[0] || "").replace(" ", "T");
+    document.getElementById("end").value = (times[1] || "").replace(" ", "T");
+    
     document.getElementById("reason").value = L.reason || "";
 }
 
@@ -579,7 +587,6 @@ function saveEdit(){
     e.role=document.getElementById("editRole").value;
     e.dept=document.getElementById("editDept").value;
     
-    // 獎金邏輯：原始獎金 + 新增 - 扣除
     let bAdd = Number(document.getElementById("editBonusAdd").value) || 0;
     let bSub = Number(document.getElementById("editBonusSub").value) || 0;
     e.bonus = (Number(e.bonus) || 0) + bAdd - bSub;
